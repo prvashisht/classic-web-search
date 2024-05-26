@@ -5,7 +5,13 @@
   "description": "This extension automatically redirects your Google searches to the classic web only version of Google Search.",
   "author": "Pratyush Vashisht",
   "background": {
-    "service_worker": "service_worker.js"
+    "scripts": ["service_worker.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{245d8218-66d9-4631-86b2-7aa4c39c009b}",
+      "strict_min_version": "110.0"
+    }
   },
   "content_scripts": [
     {
