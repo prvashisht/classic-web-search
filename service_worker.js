@@ -12,7 +12,7 @@ let setExtensionUninstallURL = (settings) => {
       .join("\n")
   );
   chrome.runtime.setUninstallURL(
-    `https://pratyushvashisht.com/legacywebsearch/uninstall?utm_source=browser&utm_medium=extension&utm_campaign=uninstall&debugData=${encodedDebugData}`
+    `https://pratyushvashisht.com/classicwebsearch/uninstall?utm_source=browser&utm_medium=extension&utm_campaign=uninstall&debugData=${encodedDebugData}`
   );
 };
 
