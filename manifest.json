@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Web Only (Legacy) Google Search",
-  "version": "1.0",
-  "description": "This extension automatically redirects your Google searches to the legacy web only version of Google Search.",
+  "name": "Web Only (Classic) Google Search",
+  "version": "1.1",
+  "description": "This extension automatically redirects your Google searches to the classic web only version of Google Search.",
   "author": "Pratyush Vashisht",
   "background": {
     "service_worker": "service_worker.js"

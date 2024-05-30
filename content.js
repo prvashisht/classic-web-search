@@ -1,9 +1,12 @@
+let lastClicked = '';
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "clickWebSearch") {
-    document.querySelectorAll('div[role="navigation"] div[role="listitem"]').forEach(async item => {
-      if (item.textContent.trim() === "Web" && item.querySelector('a')) {
+    document.querySelectorAll('div[role="navigation"] div[role="listitem"] a').forEach(async item => {
+      let url = new URL(item.href);
+      if (url.searchParams.get('udm') == 14 && message.query != lastClicked) {
         await sendResponse({ success: true });
-        item.querySelector('a').click();
+        lastClicked = message.query;
+        item.click();
       }
     });
   }

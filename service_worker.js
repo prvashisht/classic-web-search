@@ -1,6 +1,7 @@
-let legacyWebSearchSettings = {
+let classicWebSearchSettings = {
   isWebSearchEnabled: false,
   lastChangedSearch: "",
+  num_changes: 0,
 };
 
 let setExtensionUninstallURL = (settings) => {
@@ -16,22 +17,22 @@ let setExtensionUninstallURL = (settings) => {
 };
 
 let saveAndApplyExtensionDetails = details => {
-  legacyWebSearchSettings = { ...legacyWebSearchSettings, ...details };
+  classicWebSearchSettings = { ...classicWebSearchSettings, ...details };
 
-  chrome.storage.sync.set({ legacyWebSearchSettings });
-  setExtensionUninstallURL(legacyWebSearchSettings);
+  chrome.storage.sync.set({ classicWebSearchSettings });
+  setExtensionUninstallURL(classicWebSearchSettings);
   chrome.action.setBadgeText({
-    text: legacyWebSearchSettings.isWebSearchEnabled ? "on" : "off",
+    text: classicWebSearchSettings.isWebSearchEnabled ? "on" : "off",
   });
   
   chrome.action.setBadgeBackgroundColor({
-    color: legacyWebSearchSettings.isWebSearchEnabled ? "#00FF00" : "#F00000",
+    color: classicWebSearchSettings.isWebSearchEnabled ? "#00FF00" : "#F00000",
   });
 };
 
 chrome.action.onClicked.addListener(() => {
   saveAndApplyExtensionDetails({
-    isWebSearchEnabled: !legacyWebSearchSettings.isWebSearchEnabled,
+    isWebSearchEnabled: !classicWebSearchSettings.isWebSearchEnabled,
   });
 });
 
@@ -53,15 +54,15 @@ chrome.runtime.onInstalled.addListener(async installInfo => {
   };
   if (installDate) debugData.installDate = installDate;
   if (updateDate) debugData.updateDate = updateDate;
-  const data = await chrome.storage.sync.get("legacyWebSearchSettings");
-  if (!data.legacyWebSearchSettings) {
+  const data = await chrome.storage.sync.get("classicWebSearchSettings");
+  if (!data.classicWebSearchSettings) {
     saveAndApplyExtensionDetails(debugData);
     return;
   }
   saveAndApplyExtensionDetails({
-    ...data.legacyWebSearchSettings,
+    ...data.classicWebSearchSettings,
     ...debugData,
-    num_changes: data.legacyWebSearchSettings.num_changes || 0,
+    num_changes: data.classicWebSearchSettings.num_changes || 0,
   });
 });
 
@@ -80,19 +81,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       // for web search: udm is 14
       if (
           query
-          && query !== legacyWebSearchSettings.lastChangedSearch
-          && legacyWebSearchSettings.isWebSearchEnabled
+          && query !== classicWebSearchSettings.lastChangedSearch
+          && classicWebSearchSettings.isWebSearchEnabled
           && !udm
       ) {
         chrome.tabs.sendMessage(tab.id, { action: "clickWebSearch", query }, (response) => {
           if (response && response.success) {
+            classicWebSearchSettings.num_changes++;
             saveAndApplyExtensionDetails({
               lastChangedSearch: query,
-              num_changes: legacyWebSearchSettings.num_changes + 1,
             });
           }
         });
-      } else if (query && query !== legacyWebSearchSettings.lastChangedSearch) {
+      } else if (query && query !== classicWebSearchSettings.lastChangedSearch) {
         saveAndApplyExtensionDetails({ lastChangedSearch: query });
       }
     }

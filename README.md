@@ -1,18 +1,18 @@
-# Web Only (Legacy) Google Search Chrome Extension
+# Web Only (Classic) Google Search Chrome Extension
 
 [![Version](https://img.shields.io/badge/Version-1.0-blue.svg)]()
 
-This Chrome extension automatically redirects your Google searches to the legacy web only version of Google Search.
+This Chrome extension automatically redirects your Google searches to the classic web only version of Google Search.
 
 ## Features
 
-- **Web Only Google Search:** Automatically redirects your Google searches to the legacy web only version.
+- **Web Only Google Search:** Automatically redirects your Google searches to the classic web only version.
 - **Dynamic Search:** The extension only works when the search query changes, allowing the user to switch to any other search type within the same query.
 - **Toggle Feature:** Easily enable or disable the extension with a single click from the extension icon.
 
 ## Installation
 
-You can install the extension from the [Chrome Web Store](https://pratyushvashisht.com/legacywebsearch) or follow these steps for local development:
+You can install the extension from the [Chrome Web Store](https://pratyushvashisht.com/classicwebsearch) or follow these steps for local development:
 
 1. Clone the repository:
 ```
