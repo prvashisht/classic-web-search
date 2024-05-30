@@ -1,6 +1,6 @@
 # Web Only (Classic) Google Search Chrome Extension
 
-[![Version](https://img.shields.io/badge/Version-1.1-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-1.2-blue.svg)]()
 
 This Chrome extension automatically redirects your Google searches to the classic web only version of Google Search.
 
