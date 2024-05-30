@@ -1,5 +1,5 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Web Only (Classic) Google Search",
   "version": "1.2",
   "description": "This extension automatically redirects your Google searches to the classic web only version of Google Search.",
@@ -19,16 +19,13 @@
       "matches": ["*://*.google.com/*"]
     }
   ],
-  "host_permissions": [
-    "*://*.google.com/*"
-  ],
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "action": {
+  "browser_action": {
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
