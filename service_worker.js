@@ -11,7 +11,7 @@ let setExtensionUninstallURL = (settings) => {
       .map((key) => `${key}: ${settings[key]}`)
       .join("\n")
   );
-  chrome.runtime.setUninstallURL(
+  browser.runtime.setUninstallURL(
     `https://pratyushvashisht.com/classicwebsearch/uninstall?utm_source=browser&utm_medium=extension&utm_campaign=uninstall&debugData=${encodedDebugData}`
   );
 };
@@ -19,42 +19,42 @@ let setExtensionUninstallURL = (settings) => {
 let saveAndApplyExtensionDetails = details => {
   classicWebSearchSettings = { ...classicWebSearchSettings, ...details };
 
-  chrome.storage.sync.set({ classicWebSearchSettings });
+  browser.storage.sync.set({ classicWebSearchSettings });
   setExtensionUninstallURL(classicWebSearchSettings);
-  chrome.action.setBadgeText({
+  browser.browserAction.setBadgeText({
     text: classicWebSearchSettings.isWebSearchEnabled ? "on" : "off",
   });
   
-  chrome.action.setBadgeBackgroundColor({
+  browser.browserAction.setBadgeBackgroundColor({
     color: classicWebSearchSettings.isWebSearchEnabled ? "#00FF00" : "#F00000",
   });
 };
 
-chrome.action.onClicked.addListener(() => {
+browser.browserAction.onClicked.addListener(() => {
   saveAndApplyExtensionDetails({
     isWebSearchEnabled: !classicWebSearchSettings.isWebSearchEnabled,
   });
 });
 
-chrome.runtime.onInstalled.addListener(async installInfo => {
+browser.runtime.onInstalled.addListener(async installInfo => {
   let installDate, updateDate;
   if (installInfo.reason === "install") {
     installDate = new Date().toISOString();
   } else {
     updateDate = new Date().toISOString();
   }
-  const platformInfo = await chrome.runtime.getPlatformInfo();
+  const platformInfo = await browser.runtime.getPlatformInfo();
   let debugData = {
     ...platformInfo,
     agent: navigator.userAgent,
     locale: navigator.language,
     platform: navigator.platform,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    version: chrome.runtime.getManifest().version,
+    version: browser.runtime.getManifest().version,
   };
   if (installDate) debugData.installDate = installDate;
   if (updateDate) debugData.updateDate = updateDate;
-  const data = await chrome.storage.sync.get("classicWebSearchSettings");
+  const data = await browser.storage.sync.get("classicWebSearchSettings");
   if (!data.classicWebSearchSettings) {
     saveAndApplyExtensionDetails(debugData);
     return;
@@ -66,7 +66,7 @@ chrome.runtime.onInstalled.addListener(async installInfo => {
   });
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
     const url = new URL(tab.url);
     if (url.pathname === '/search') {
@@ -85,17 +85,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           && classicWebSearchSettings.isWebSearchEnabled
           && !udm
       ) {
-        chrome.tabs.sendMessage(tab.id, { action: "clickWebSearch", query }, (response) => {
-          if (response && response.success) {
-            classicWebSearchSettings.num_changes++;
-            saveAndApplyExtensionDetails({
-              lastChangedSearch: query,
-            });
-          }
-        });
+        browser.tabs.sendMessage(tab.id, { action: "clickWebSearch", query });
       } else if (query && query !== classicWebSearchSettings.lastChangedSearch) {
         saveAndApplyExtensionDetails({ lastChangedSearch: query });
       }
     }
+  }
+});
+
+browser.runtime.onMessage.addListener((message) => {
+  if (message?.action === "clickWebSearch" && message?.success) {
+    classicWebSearchSettings.num_changes++;
+    saveAndApplyExtensionDetails({
+      lastChangedSearch: query,
+    });
   }
 });
