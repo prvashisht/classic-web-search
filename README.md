@@ -12,7 +12,7 @@ This Chrome extension automatically redirects your Google searches to the classi
 
 ## Installation
 
-You can install the extension from the [Chrome Web Store](https://pratyushvashisht.com/classicwebsearch) or follow these steps for local development:
+You can install the extension from the [respective browsers' Web Store](https://pratyushvashisht.com/classicwebsearch?utm_medium=github&utm_name=readme) or follow these steps for local development:
 
 1. Clone the repository:
 ```
