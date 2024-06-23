@@ -2,17 +2,17 @@
 
 [![Version](https://img.shields.io/badge/Version-1.2-blue.svg)]()
 
-This Chrome extension automatically redirects your Google searches to the classic web only version of Google Search.
+This Chrome extension automatically redirects your Google searches to the classic web-only version of Google Search.
 
 ## Features
 
-- **Web Only Google Search:** Automatically redirects your Google searches to the classic web only version.
+- **Web Only Google Search:** Automatically redirects your Google searches to the classic web-only version.
 - **Dynamic Search:** The extension only works when the search query changes, allowing the user to switch to any other search type within the same query.
 - **Toggle Feature:** Easily enable or disable the extension with a single click from the extension icon.
 
 ## Installation
 
-You can install the extension from the [respective browsers' Web Store](https://pratyushvashisht.com/classicwebsearch?utm_medium=github&utm_name=readme) or follow these steps for local development:
+You can install the extension from the [respective browsers' Web Store](https://vashis.ht/rd/classicwebsearch?from=github-readme) or follow these steps for local development:
 
 1. Clone the repository:
 ```
