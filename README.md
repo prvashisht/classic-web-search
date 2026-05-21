@@ -41,3 +41,7 @@ Contributions are welcome! Here's how you can get involved:
 4. Discuss your changes with the community.
 
 Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when contributing.
+
+## Roadmap
+
+Planned improvements are tracked in [ROADMAP.md](ROADMAP.md).
