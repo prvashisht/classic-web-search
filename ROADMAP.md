@@ -20,7 +20,7 @@ land before broader product and release-process work.
    Load saved settings before handling tab updates or toolbar clicks so browser
    service worker restarts do not reset the extension to default in memory.
 
-- [ ] Harden background URL handling.
+- [x] Harden background URL handling.
    Guard against missing or non-HTTP tab URLs before constructing `URL`
    instances, preventing runtime errors on browser pages or incomplete tab
    updates.
