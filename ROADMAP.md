@@ -27,31 +27,31 @@ land before broader product and release-process work.
 
 ## Priority 2: Cross-Browser Support
 
-- [ ] Add a browser API adapter.
+- [x] Add a browser API adapter.
    Centralize Chrome, Edge, and Firefox API differences behind a small
    `webext.js` helper so extension logic does not need to mix `chrome.*` and
    `browser.*` assumptions.
 
-- [ ] Generate browser-specific manifests during packaging.
+- [x] Generate browser-specific manifests during packaging.
    Keep one source manifest, then produce Chrome/Edge and Firefox-compatible
    manifests at build time.
 
-- [ ] Add Firefox extension metadata.
+- [x] Add Firefox extension metadata.
    Include the Gecko extension ID and minimum supported Firefox version in the
    Firefox build output.
 
 ## Priority 3: Build And Release Automation
 
-- [ ] Add a release notes file.
-   Track the shipped version and user-facing changes in `release-notes.json`.
-   The build should fail if its version does not match `manifest.json`.
+- [x] Generate release notes from merged PRs.
+   Let the GitHub Release workflow populate each version tag's notes from merged
+   pull requests instead of maintaining a separate release notes file.
 
-- [ ] Add a local packaging script.
+- [x] Add a local packaging script.
    Create reproducible zip artifacts under `dist/`, with browser-specific
    filenames such as `classic-web-search-chrome-vX.X.X.zip` and
    `classic-web-search-firefox-vX.X.X.zip`.
 
-- [ ] Add a GitHub Release workflow.
+- [x] Add a GitHub Release workflow.
    On `main` changes to `manifest.json`, build the extension zips, create a
    `vX.X.X` GitHub release if the tag does not already exist, and attach the
    artifacts.
