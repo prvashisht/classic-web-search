@@ -1,0 +1,145 @@
+name: Store Deploy
+
+on:
+  # GitHub does not emit release webhooks for releases created by GITHUB_TOKEN
+  # in another workflow, so deploy after the Release workflow succeeds.
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to deploy, such as 1.4.0. Defaults to latest release."
+        required: false
+        type: string
+      stores:
+        description: "Which stores to deploy to"
+        type: choice
+        options: [all, chrome, firefox]
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Resolve release version
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="$(gh release list --repo "${{ github.repository }}" --limit 1 --json tagName -q '.[0].tagName' | sed 's/^v//')"
+          fi
+
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not resolve a release version to deploy"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  chrome:
+    needs: resolve
+    runs-on: ubuntu-latest
+    if: |
+      needs.resolve.outputs.version != '' &&
+      (github.event_name != 'workflow_dispatch' || inputs.stores == 'all' || inputs.stores == 'chrome')
+    env:
+      CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+      CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+      CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+      CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+    steps:
+      - name: Check Chrome Web Store secrets
+        id: check
+        run: |
+          missing=()
+          for name in CHROME_EXTENSION_ID CHROME_CLIENT_ID CHROME_CLIENT_SECRET CHROME_REFRESH_TOKEN; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping Chrome Web Store deploy. Missing secrets: ${missing[*]}"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download Chrome zip from release
+        if: steps.check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "v${{ needs.resolve.outputs.version }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "classic-web-search-chrome-v${{ needs.resolve.outputs.version }}.zip" \
+            --dir .
+
+      - name: Upload to Chrome Web Store
+        if: steps.check.outputs.skip == 'false'
+        uses: browser-actions/release-chrome-extension@latest
+        with:
+          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          extension-path: classic-web-search-chrome-v${{ needs.resolve.outputs.version }}.zip
+          oauth-client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          oauth-client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          oauth-refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+  firefox:
+    needs: resolve
+    runs-on: ubuntu-latest
+    if: |
+      needs.resolve.outputs.version != '' &&
+      (github.event_name != 'workflow_dispatch' || inputs.stores == 'all' || inputs.stores == 'firefox')
+    env:
+      FIREFOX_API_KEY: ${{ secrets.FIREFOX_API_KEY }}
+      FIREFOX_API_SECRET: ${{ secrets.FIREFOX_API_SECRET }}
+    steps:
+      - name: Check Firefox Add-ons secrets
+        id: check
+        run: |
+          missing=()
+          for name in FIREFOX_API_KEY FIREFOX_API_SECRET; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping Firefox Add-ons deploy. Missing secrets: ${missing[*]}"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download Firefox zip from release
+        if: steps.check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "v${{ needs.resolve.outputs.version }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "classic-web-search-firefox-v${{ needs.resolve.outputs.version }}.zip" \
+            --dir .
+
+      - name: Upload to Firefox Add-ons
+        if: steps.check.outputs.skip == 'false'
+        uses: wdzeng/firefox-addon@v1
+        with:
+          addon-guid: "{245d8218-66d9-4631-86b2-7aa4c39c009b}"
+          xpi-path: classic-web-search-firefox-v${{ needs.resolve.outputs.version }}.zip
+          jwt-issuer: ${{ secrets.FIREFOX_API_KEY }}
+          jwt-secret: ${{ secrets.FIREFOX_API_SECRET }}
+
+  # Edge Add-ons remains a manual upload through Partner Center.

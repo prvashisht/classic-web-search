@@ -56,7 +56,7 @@ land before broader product and release-process work.
    `vX.X.X` GitHub release if the tag does not already exist, and attach the
    artifacts.
 
-- [ ] Add store deployment workflows.
+- [x] Add store deployment workflows.
    Publish release artifacts to Chrome Web Store and Firefox Add-ons using
    repository secrets. Keep Edge as a documented manual upload unless automated
    Edge publishing becomes worth the extra setup.
