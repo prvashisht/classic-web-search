@@ -8,7 +8,7 @@ set -euo pipefail
 
 VERSION=$(node -p "require('./manifest.json').version")
 DIST="dist"
-FIREFOX_GECKO_ID="{54c8aa56-f618-456d-996a-0260c64ffdcc}"
+FIREFOX_GECKO_ID="{245d8218-66d9-4631-86b2-7aa4c39c009b}"
 FIREFOX_MIN_VERSION="121.0"
 
 SOURCES=(
