@@ -30,9 +30,10 @@ let saveAndApplyExtensionDetails = details => {
   });
 };
 
+let googleSearchHostnamePattern = /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/;
+
 let isGoogleSearchPage = url => (
-  (url.hostname === 'google.com' || url.hostname === 'www.google.com')
-    && url.pathname === '/search'
+  googleSearchHostnamePattern.test(url.hostname) && url.pathname === '/search'
 );
 
 let hasExplicitSearchMode = url => (
