@@ -11,7 +11,7 @@ land before broader product and release-process work.
    script instead of finding and clicking the Web tab in the page. This removes
    reliance on Google page structure and timing.
 
-- [ ] Add redirect loop protection and URL guards.
+- [x] Add redirect loop protection and URL guards.
    Redirect only when the current page is a Google `/search` page, a search
    query exists, and `udm` is not already `14`. Preserve user choice when they
    intentionally switch to Images, News, or another search mode.

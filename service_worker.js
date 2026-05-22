@@ -30,6 +30,16 @@ let saveAndApplyExtensionDetails = details => {
   });
 };
 
+let googleSearchHostnamePattern = /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/;
+
+let isGoogleSearchPage = url => (
+  googleSearchHostnamePattern.test(url.hostname) && url.pathname === '/search'
+);
+
+let hasExplicitSearchMode = url => (
+  url.searchParams.has('udm') || url.searchParams.has('tbm')
+);
+
 chrome.action.onClicked.addListener(() => {
   saveAndApplyExtensionDetails({
     isWebSearchEnabled: !classicWebSearchSettings.isWebSearchEnabled,
@@ -69,21 +79,19 @@ chrome.runtime.onInstalled.addListener(async installInfo => {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
     const url = new URL(tab.url);
-    if (url.pathname === '/search') {
+    if (isGoogleSearchPage(url)) {
       const query = url.searchParams.get('q');
       const udm = url.searchParams.get('udm');
-      // If there is a query, it's different from the last one, web search is enabled, and udm is not set.
-      // This doesn't switch to web search if the user clicks on another search type or 
-      // switches back to default search with the same query.
-
-      // udm parameter is set for different types of searches like image search, etc
-      // for image search: udm is 2
-      // for web search: udm is 14
+      const alreadyClassicWebSearch = udm === '14';
+      const explicitSearchModeSelected = hasExplicitSearchMode(url);
+      // Only rewrite plain Google search pages. Existing udm/tbm modes represent
+      // the user's selected search type, such as Web, Images, News, or Shopping.
       if (
           query
           && query !== classicWebSearchSettings.lastChangedSearch
           && classicWebSearchSettings.isWebSearchEnabled
-          && !udm
+          && !alreadyClassicWebSearch
+          && !explicitSearchModeSelected
       ) {
         url.searchParams.set('udm', '14');
         chrome.tabs.update(tabId, { url: url.toString() }, () => {
