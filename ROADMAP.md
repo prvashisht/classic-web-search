@@ -16,7 +16,7 @@ land before broader product and release-process work.
    query exists, and `udm` is not already `14`. Preserve user choice when they
    intentionally switch to Images, News, or another search mode.
 
-- [ ] Restore extension state on service worker startup.
+- [x] Restore extension state on service worker startup.
    Load saved settings before handling tab updates or toolbar clicks so browser
    service worker restarts do not reset the extension to default in memory.
 

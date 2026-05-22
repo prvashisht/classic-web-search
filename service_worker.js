@@ -16,19 +16,46 @@ let setExtensionUninstallURL = (settings) => {
   );
 };
 
-let saveAndApplyExtensionDetails = details => {
+let applyExtensionDetails = details => {
   classicWebSearchSettings = { ...classicWebSearchSettings, ...details };
 
-  chrome.storage.sync.set({ classicWebSearchSettings });
   setExtensionUninstallURL(classicWebSearchSettings);
   chrome.action.setBadgeText({
     text: classicWebSearchSettings.isWebSearchEnabled ? "on" : "off",
   });
-  
+
   chrome.action.setBadgeBackgroundColor({
     color: classicWebSearchSettings.isWebSearchEnabled ? "#00FF00" : "#F00000",
   });
 };
+
+let saveAndApplyExtensionDetails = async details => {
+  applyExtensionDetails(details);
+  await chrome.storage.sync.set({ classicWebSearchSettings });
+};
+
+let logExtensionDetailsSaveFailure = error => {
+  console.error("Failed to save classic web search settings", error);
+};
+
+let restoreExtensionDetails = async () => {
+  try {
+    const data = await chrome.storage.sync.get("classicWebSearchSettings");
+    const savedSettings = data.classicWebSearchSettings;
+    if (savedSettings) {
+      applyExtensionDetails({
+        ...savedSettings,
+        num_changes: savedSettings.num_changes || 0,
+      });
+      return;
+    }
+  } catch (error) {
+    console.error("Failed to restore classic web search settings", error);
+  }
+  applyExtensionDetails({});
+};
+
+let classicWebSearchSettingsReady = restoreExtensionDetails();
 
 let googleSearchHostnamePattern = /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/;
 
@@ -40,13 +67,15 @@ let hasExplicitSearchMode = url => (
   url.searchParams.has('udm') || url.searchParams.has('tbm')
 );
 
-chrome.action.onClicked.addListener(() => {
-  saveAndApplyExtensionDetails({
+chrome.action.onClicked.addListener(async () => {
+  await classicWebSearchSettingsReady;
+  await saveAndApplyExtensionDetails({
     isWebSearchEnabled: !classicWebSearchSettings.isWebSearchEnabled,
   });
 });
 
 chrome.runtime.onInstalled.addListener(async installInfo => {
+  await classicWebSearchSettingsReady;
   let installDate, updateDate;
   if (installInfo.reason === "install") {
     installDate = new Date().toISOString();
@@ -66,17 +95,18 @@ chrome.runtime.onInstalled.addListener(async installInfo => {
   if (updateDate) debugData.updateDate = updateDate;
   const data = await chrome.storage.sync.get("classicWebSearchSettings");
   if (!data.classicWebSearchSettings) {
-    saveAndApplyExtensionDetails(debugData);
+    await saveAndApplyExtensionDetails(debugData);
     return;
   }
-  saveAndApplyExtensionDetails({
+  await saveAndApplyExtensionDetails({
     ...data.classicWebSearchSettings,
     ...debugData,
     num_changes: data.classicWebSearchSettings.num_changes || 0,
   });
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  await classicWebSearchSettingsReady;
   if (changeInfo.status === 'complete') {
     const url = new URL(tab.url);
     if (isGoogleSearchPage(url)) {
@@ -100,10 +130,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           saveAndApplyExtensionDetails({
             lastChangedSearch: query,
             num_changes: classicWebSearchSettings.num_changes + 1,
-          });
+          }).catch(logExtensionDetailsSaveFailure);
         });
       } else if (query && query !== classicWebSearchSettings.lastChangedSearch) {
-        saveAndApplyExtensionDetails({ lastChangedSearch: query });
+        saveAndApplyExtensionDetails({ lastChangedSearch: query })
+          .catch(logExtensionDetailsSaveFailure);
       }
     }
   }
