@@ -85,13 +85,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           && classicWebSearchSettings.isWebSearchEnabled
           && !udm
       ) {
-        chrome.tabs.sendMessage(tab.id, { action: "clickWebSearch", query }, (response) => {
-          if (response && response.success) {
-            classicWebSearchSettings.num_changes++;
-            saveAndApplyExtensionDetails({
-              lastChangedSearch: query,
-            });
-          }
+        url.searchParams.set('udm', '14');
+        chrome.tabs.update(tabId, { url: url.toString() }, () => {
+          if (chrome.runtime.lastError) return;
+
+          saveAndApplyExtensionDetails({
+            lastChangedSearch: query,
+            num_changes: classicWebSearchSettings.num_changes + 1,
+          });
         });
       } else if (query && query !== classicWebSearchSettings.lastChangedSearch) {
         saveAndApplyExtensionDetails({ lastChangedSearch: query });

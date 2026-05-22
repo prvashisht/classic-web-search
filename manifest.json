@@ -1,18 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Web Only (Classic) Google Search",
-  "version": "1.2",
+  "version": "1.3",
   "description": "This extension automatically redirects your Google searches to the classic web only version of Google Search.",
   "author": "Pratyush Vashisht",
   "background": {
     "service_worker": "service_worker.js"
   },
-  "content_scripts": [
-    {
-      "js": ["content.js"],
-      "matches": ["*://*.google.com/*"]
-    }
-  ],
   "host_permissions": [
     "*://*.google.com/*"
   ],

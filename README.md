@@ -1,6 +1,6 @@
 # Web Only (Classic) Google Search Chrome Extension
 
-[![Version](https://img.shields.io/badge/Version-1.2-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-1.3-blue.svg)]()
 
 This Chrome extension automatically redirects your Google searches to the classic web-only version of Google Search.
 
@@ -28,8 +28,7 @@ git clone
 ## Files
 
 - **`manifest.json`**: Contains metadata about the extension, including permissions, icons, and scripts.
-- **`content.js`**: Handles the content script that interacts with Google Search pages.
-- **`service_worker.js`**: Manages the extension behavior in the background, including badge text and color.
+- **`service_worker.js`**: Manages the extension behavior in the background, including badge text, color, and Google Search URL redirects.
 
 ## How to Contribute
 
