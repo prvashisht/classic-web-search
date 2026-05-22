@@ -58,6 +58,19 @@ let restoreExtensionDetails = async () => {
 let classicWebSearchSettingsReady = restoreExtensionDetails();
 
 let googleSearchHostnamePattern = /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/;
+let httpUrlPattern = /^https?:\/\//i;
+
+let getHttpTabUrl = tab => {
+  if (!tab || typeof tab.url !== 'string' || !httpUrlPattern.test(tab.url)) {
+    return null;
+  }
+
+  try {
+    return new URL(tab.url);
+  } catch (error) {
+    return null;
+  }
+};
 
 let isGoogleSearchPage = url => (
   googleSearchHostnamePattern.test(url.hostname) && url.pathname === '/search'
@@ -107,35 +120,39 @@ chrome.runtime.onInstalled.addListener(async installInfo => {
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   await classicWebSearchSettingsReady;
-  if (changeInfo.status === 'complete') {
-    const url = new URL(tab.url);
-    if (isGoogleSearchPage(url)) {
-      const query = url.searchParams.get('q');
-      const udm = url.searchParams.get('udm');
-      const alreadyClassicWebSearch = udm === '14';
-      const explicitSearchModeSelected = hasExplicitSearchMode(url);
-      // Only rewrite plain Google search pages. Existing udm/tbm modes represent
-      // the user's selected search type, such as Web, Images, News, or Shopping.
-      if (
-          query
-          && query !== classicWebSearchSettings.lastChangedSearch
-          && classicWebSearchSettings.isWebSearchEnabled
-          && !alreadyClassicWebSearch
-          && !explicitSearchModeSelected
-      ) {
-        url.searchParams.set('udm', '14');
-        chrome.tabs.update(tabId, { url: url.toString() }, () => {
-          if (chrome.runtime.lastError) return;
+  if (changeInfo.status !== 'complete') {
+    return;
+  }
 
-          saveAndApplyExtensionDetails({
-            lastChangedSearch: query,
-            num_changes: classicWebSearchSettings.num_changes + 1,
-          }).catch(logExtensionDetailsSaveFailure);
-        });
-      } else if (query && query !== classicWebSearchSettings.lastChangedSearch) {
-        saveAndApplyExtensionDetails({ lastChangedSearch: query })
-          .catch(logExtensionDetailsSaveFailure);
-      }
-    }
+  const url = getHttpTabUrl(tab);
+  if (!url || !isGoogleSearchPage(url)) {
+    return;
+  }
+
+  const query = url.searchParams.get('q');
+  const udm = url.searchParams.get('udm');
+  const alreadyClassicWebSearch = udm === '14';
+  const explicitSearchModeSelected = hasExplicitSearchMode(url);
+  // Only rewrite plain Google search pages. Existing udm/tbm modes represent
+  // the user's selected search type, such as Web, Images, News, or Shopping.
+  if (
+      query
+      && query !== classicWebSearchSettings.lastChangedSearch
+      && classicWebSearchSettings.isWebSearchEnabled
+      && !alreadyClassicWebSearch
+      && !explicitSearchModeSelected
+  ) {
+    url.searchParams.set('udm', '14');
+    chrome.tabs.update(tabId, { url: url.toString() }, () => {
+      if (chrome.runtime.lastError) return;
+
+      saveAndApplyExtensionDetails({
+        lastChangedSearch: query,
+        num_changes: classicWebSearchSettings.num_changes + 1,
+      }).catch(logExtensionDetailsSaveFailure);
+    });
+  } else if (query && query !== classicWebSearchSettings.lastChangedSearch) {
+    saveAndApplyExtensionDetails({ lastChangedSearch: query })
+      .catch(logExtensionDetailsSaveFailure);
   }
 });
