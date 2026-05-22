@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [manifest.json]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Create or update the release even if the version tag already exists"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version from manifest
+        id: version
+        run: |
+          VERSION="$(node -p "require('./manifest.json').version")"
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Read previous version from manifest
+        id: previous
+        if: github.event_name == 'push'
+        run: |
+          if git show "${{ github.event.before }}:manifest.json" >/tmp/previous-manifest.json 2>/dev/null; then
+            PREVIOUS_VERSION="$(node -p "require('/tmp/previous-manifest.json').version")"
+          else
+            PREVIOUS_VERSION=""
+          fi
+          echo "value=$PREVIOUS_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag already exists
+        id: tag
+        run: |
+          if git tag --list "v${{ steps.version.outputs.value }}" | grep -q .; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build extension zips
+        if: >-
+          (
+            github.event_name == 'push' &&
+            steps.version.outputs.value != steps.previous.outputs.value &&
+            steps.tag.outputs.exists == 'false'
+          ) ||
+          (
+            github.event_name == 'workflow_dispatch' &&
+            (steps.tag.outputs.exists == 'false' || inputs.force)
+          )
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Create GitHub release
+        if: >-
+          (
+            github.event_name == 'push' &&
+            steps.version.outputs.value != steps.previous.outputs.value &&
+            steps.tag.outputs.exists == 'false'
+          ) ||
+          (
+            github.event_name == 'workflow_dispatch' &&
+            (steps.tag.outputs.exists == 'false' || inputs.force)
+          )
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          name: v${{ steps.version.outputs.value }}
+          generate_release_notes: true
+          files: |
+            dist/classic-web-search-chrome-v${{ steps.version.outputs.value }}.zip
+            dist/classic-web-search-firefox-v${{ steps.version.outputs.value }}.zip

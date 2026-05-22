@@ -1,3 +1,5 @@
+import { webext } from './webext.js';
+
 let classicWebSearchSettings = {
   isWebSearchEnabled: false,
   lastChangedSearch: "",
@@ -11,27 +13,36 @@ let setExtensionUninstallURL = (settings) => {
       .map((key) => `${key}: ${settings[key]}`)
       .join("\n")
   );
-  chrome.runtime.setUninstallURL(
-    `https://pratyushvashisht.com/classicwebsearch/uninstall?utm_source=browser&utm_medium=extension&utm_campaign=uninstall&debugData=${encodedDebugData}`
-  );
+  const uninstallURL = `https://pratyushvashisht.com/classicwebsearch/uninstall?utm_source=browser&utm_medium=extension&utm_campaign=uninstall&debugData=${encodedDebugData}`;
+
+  try {
+    const result = webext.runtime.setUninstallURL(uninstallURL);
+    if (result && typeof result.catch === 'function') {
+      result.catch(error => {
+        console.warn("Failed to set uninstall URL", error);
+      });
+    }
+  } catch (error) {
+    console.warn("Failed to set uninstall URL", error);
+  }
 };
 
 let applyExtensionDetails = details => {
   classicWebSearchSettings = { ...classicWebSearchSettings, ...details };
 
   setExtensionUninstallURL(classicWebSearchSettings);
-  chrome.action.setBadgeText({
+  webext.action.setBadgeText({
     text: classicWebSearchSettings.isWebSearchEnabled ? "on" : "off",
   });
 
-  chrome.action.setBadgeBackgroundColor({
+  webext.action.setBadgeBackgroundColor({
     color: classicWebSearchSettings.isWebSearchEnabled ? "#00FF00" : "#F00000",
   });
 };
 
 let saveAndApplyExtensionDetails = async details => {
   applyExtensionDetails(details);
-  await chrome.storage.sync.set({ classicWebSearchSettings });
+  await webext.storage.sync.set({ classicWebSearchSettings });
 };
 
 let logExtensionDetailsSaveFailure = error => {
@@ -40,7 +51,7 @@ let logExtensionDetailsSaveFailure = error => {
 
 let restoreExtensionDetails = async () => {
   try {
-    const data = await chrome.storage.sync.get("classicWebSearchSettings");
+    const data = await webext.storage.sync.get("classicWebSearchSettings");
     const savedSettings = data.classicWebSearchSettings;
     if (savedSettings) {
       applyExtensionDetails({
@@ -80,14 +91,14 @@ let hasExplicitSearchMode = url => (
   url.searchParams.has('udm') || url.searchParams.has('tbm')
 );
 
-chrome.action.onClicked.addListener(async () => {
+webext.action.onClicked.addListener(async () => {
   await classicWebSearchSettingsReady;
   await saveAndApplyExtensionDetails({
     isWebSearchEnabled: !classicWebSearchSettings.isWebSearchEnabled,
   });
 });
 
-chrome.runtime.onInstalled.addListener(async installInfo => {
+webext.runtime.onInstalled.addListener(async installInfo => {
   await classicWebSearchSettingsReady;
   let installDate, updateDate;
   if (installInfo.reason === "install") {
@@ -95,18 +106,18 @@ chrome.runtime.onInstalled.addListener(async installInfo => {
   } else {
     updateDate = new Date().toISOString();
   }
-  const platformInfo = await chrome.runtime.getPlatformInfo();
+  const platformInfo = await webext.runtime.getPlatformInfo();
   let debugData = {
     ...platformInfo,
     agent: navigator.userAgent,
     locale: navigator.language,
     platform: navigator.platform,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    version: chrome.runtime.getManifest().version,
+    version: webext.runtime.getManifest().version,
   };
   if (installDate) debugData.installDate = installDate;
   if (updateDate) debugData.updateDate = updateDate;
-  const data = await chrome.storage.sync.get("classicWebSearchSettings");
+  const data = await webext.storage.sync.get("classicWebSearchSettings");
   if (!data.classicWebSearchSettings) {
     await saveAndApplyExtensionDetails(debugData);
     return;
@@ -118,7 +129,7 @@ chrome.runtime.onInstalled.addListener(async installInfo => {
   });
 });
 
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+webext.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   await classicWebSearchSettingsReady;
   if (changeInfo.status !== 'complete') {
     return;
@@ -143,14 +154,16 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       && !explicitSearchModeSelected
   ) {
     url.searchParams.set('udm', '14');
-    chrome.tabs.update(tabId, { url: url.toString() }, () => {
-      if (chrome.runtime.lastError) return;
+    try {
+      await webext.tabs.update(tabId, { url: url.toString() });
+    } catch (error) {
+      return;
+    }
 
-      saveAndApplyExtensionDetails({
-        lastChangedSearch: query,
-        num_changes: classicWebSearchSettings.num_changes + 1,
-      }).catch(logExtensionDetailsSaveFailure);
-    });
+    saveAndApplyExtensionDetails({
+      lastChangedSearch: query,
+      num_changes: classicWebSearchSettings.num_changes + 1,
+    }).catch(logExtensionDetailsSaveFailure);
   } else if (query && query !== classicWebSearchSettings.lastChangedSearch) {
     saveAndApplyExtensionDetails({ lastChangedSearch: query })
       .catch(logExtensionDetailsSaveFailure);
