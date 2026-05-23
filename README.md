@@ -1,6 +1,6 @@
 # Classic Web Search for Google Chrome Extension
 
-[![Version](https://img.shields.io/badge/Version-1.4.1-blue.svg)]()
+[![Version](https://img.shields.io/github/v/release/prvashisht/classic-web-search?sort=semver&label=Version)](https://github.com/prvashisht/classic-web-search/releases/latest)
 
 This Chrome extension automatically redirects your Google searches to the classic web-only results view.
 
