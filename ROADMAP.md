@@ -1,6 +1,6 @@
 # Roadmap
 
-This document tracks planned improvements for Web Only (Classic) Google Search.
+This document tracks planned improvements for Classic Web Search for Google.
 It is ordered by suggested implementation priority so small, high-impact changes
 land before broader product and release-process work.
 
