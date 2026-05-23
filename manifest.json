@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Web Only (Classic) Google Search",
-  "version": "1.4.0",
-  "description": "This extension automatically redirects your Google searches to the classic web only version of Google Search.",
+  "name": "Classic Web Search for Google",
+  "short_name": "Classic Web",
+  "version": "1.4.1",
+  "description": "Automatically redirects your Google searches to the classic web-only results view.",
   "author": "Pratyush Vashisht",
   "background": {
     "service_worker": "service_worker.js",
@@ -24,7 +25,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "Enable / Disable Web Only Google Search"
+    "default_title": "Enable / Disable Classic Web Search for Google"
   },
   "permissions": [
     "storage",

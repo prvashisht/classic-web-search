@@ -47,7 +47,7 @@ build() {
   echo "$outfile"
 }
 
-echo "Building Web Only (Classic) Google Search v$VERSION..."
+echo "Building Classic Web Search for Google v$VERSION..."
 
 build "chrome" "
   delete m.browser_specific_settings;

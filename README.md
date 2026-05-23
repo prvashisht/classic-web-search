@@ -1,12 +1,12 @@
-# Web Only (Classic) Google Search Chrome Extension
+# Classic Web Search for Google Chrome Extension
 
-[![Version](https://img.shields.io/badge/Version-1.3-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-1.4.1-blue.svg)]()
 
-This Chrome extension automatically redirects your Google searches to the classic web-only version of Google Search.
+This Chrome extension automatically redirects your Google searches to the classic web-only results view.
 
 ## Features
 
-- **Web Only Google Search:** Automatically redirects your Google searches to the classic web-only version.
+- **Classic Web Search for Google:** Automatically redirects your Google searches to the classic web-only results view.
 - **Dynamic Search:** The extension only works when the search query changes, allowing the user to switch to any other search type within the same query.
 - **Toggle Feature:** Easily enable or disable the extension with a single click from the extension icon.
 
