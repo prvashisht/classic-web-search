@@ -1,6 +1,6 @@
 const isFirefoxRuntime = (
   typeof browser !== "undefined"
-  && typeof browser.runtime?.getManifest === "function"
+  && /Firefox\//.test(navigator.userAgent)
 );
 
 const extensionApi = isFirefoxRuntime ? browser : chrome;
