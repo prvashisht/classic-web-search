@@ -27,6 +27,10 @@
     },
     "default_title": "Enable / Disable Classic Web Search for Google"
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "commands": {
     "_execute_action": {
       "suggested_key": {

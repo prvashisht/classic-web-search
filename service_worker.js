@@ -126,7 +126,7 @@ let buildContextMenus = async () => {
   });
   createContextMenu({
     id: CONTEXT_MENU_MANAGE_ID,
-    title: "Manage extension",
+    title: "Open options",
     contexts: ["action"],
   });
   createContextMenu({
@@ -209,7 +209,7 @@ webext.contextMenus.onClicked.addListener(async info => {
       );
       break;
     case CONTEXT_MENU_MANAGE_ID:
-      await webext.openExtensionPage();
+      await webext.openOptionsPage();
       break;
     case CONTEXT_MENU_SHORTCUTS_ID:
       await webext.openShortcutsPage();
@@ -254,6 +254,17 @@ webext.runtime.onInstalled.addListener(async installInfo => {
     num_changes: data.classicWebSearchSettings.num_changes || 0,
   });
   await scheduleBuildContextMenus();
+});
+
+webext.storage.onChanged?.addListener((changes, areaName) => {
+  if (areaName !== 'sync' || !changes.classicWebSearchSettings) {
+    return;
+  }
+
+  applyExtensionDetails({
+    ...classicWebSearchSettings,
+    ...(changes.classicWebSearchSettings.newValue || {}),
+  });
 });
 
 webext.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {

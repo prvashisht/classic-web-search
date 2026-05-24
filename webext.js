@@ -14,6 +14,16 @@ export const webext = {
   runtime: extensionApi.runtime,
   storage: extensionApi.storage,
   tabs: extensionApi.tabs,
+  openOptionsPage: async () => {
+    if (extensionApi.runtime.openOptionsPage) {
+      await extensionApi.runtime.openOptionsPage();
+      return;
+    }
+
+    await extensionApi.tabs.create({
+      url: extensionApi.runtime.getURL('options.html'),
+    });
+  },
   openExtensionPage: async () => {
     if (isFirefoxRuntime) {
       await extensionApi.tabs.create({ url: 'about:addons' });
