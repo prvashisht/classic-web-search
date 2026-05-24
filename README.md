@@ -43,7 +43,10 @@ git clone
 
 Merging a manifest version change to `main` creates a GitHub release and, by default, deploys that release to the browser stores.
 
-To create a release without automatic store deployment, add the version to `.github/store-deploy-skip-versions.txt` before merging. Manual deployment remains available from the **Store Deploy** workflow for skipped versions.
+Use `.github/release-controls.conf` to pause release automation:
+
+- `skip_release=true` skips GitHub release creation and store deployment. Set it back to `false` to run the release for the current manifest version if the tag does not already exist.
+- `skip_deploy=true` creates the GitHub release but skips Chrome Web Store and Firefox Add-ons deployment.
 
 ## Files
 

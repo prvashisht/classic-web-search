@@ -34,14 +34,42 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
 
+      - name: Read release controls
+        id: controls
+        run: bash .github/scripts/read-release-controls.sh
+
+      - name: Check store deploy controls
+        id: skip
+        env:
+          SKIP_RELEASE: ${{ steps.controls.outputs.skip_release }}
+          SKIP_DEPLOY_EFFECTIVE: ${{ steps.controls.outputs.skip_deploy_effective }}
+        run: |
+          SKIP_STORE_DEPLOY=false
+          SKIP_REASON=""
+
+          if [ "$SKIP_RELEASE" = "true" ]; then
+            SKIP_STORE_DEPLOY=true
+            SKIP_REASON="Store deploy skipped because skip_release=true in .github/release-controls.conf"
+          elif [ "$SKIP_DEPLOY_EFFECTIVE" = "true" ]; then
+            SKIP_STORE_DEPLOY=true
+            SKIP_REASON="Store deploy skipped because skip_deploy=true in .github/release-controls.conf"
+          fi
+
+          echo "skip_store_deploy=$SKIP_STORE_DEPLOY" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=$SKIP_REASON" >> "$GITHUB_OUTPUT"
+
       - name: Resolve release version
         id: resolve
+        if: steps.skip.outputs.skip_store_deploy != 'true'
         env:
+          EVENT_NAME: ${{ github.event_name }}
           GH_TOKEN: ${{ github.token }}
           INPUT_VERSION: ${{ inputs.version }}
         run: |
           if [ -n "$INPUT_VERSION" ]; then
             VERSION="$INPUT_VERSION"
+          elif [ "$EVENT_NAME" = "workflow_run" ]; then
+            VERSION="$(node -p "require('./manifest.json').version")"
           else
             VERSION="$(gh release list --repo "${{ github.repository }}" --limit 1 --json tagName -q '.[0].tagName' | sed 's/^v//')"
           fi
@@ -52,33 +80,6 @@ jobs:
           fi
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Check automatic store deploy skip list
-        id: skip
-        env:
-          VERSION: ${{ steps.resolve.outputs.version }}
-        run: |
-          SKIP_STORE_DEPLOY=false
-          SKIP_REASON=""
-
-          if [ "${{ github.event_name }}" = "workflow_run" ] && [ -f ".github/store-deploy-skip-versions.txt" ]; then
-            if awk -v version="${VERSION#v}" '
-              {
-                sub(/#.*/, "", $0)
-                gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
-                if ($0 == version || $0 == "v" version) {
-                  found = 1
-                }
-              }
-              END { exit found ? 0 : 1 }
-            ' .github/store-deploy-skip-versions.txt; then
-              SKIP_STORE_DEPLOY=true
-              SKIP_REASON="Automatic store deploy skipped because v${VERSION#v} is listed in .github/store-deploy-skip-versions.txt"
-            fi
-          fi
-
-          echo "skip_store_deploy=$SKIP_STORE_DEPLOY" >> "$GITHUB_OUTPUT"
-          echo "skip_reason=$SKIP_REASON" >> "$GITHUB_OUTPUT"
 
   skipped:
     needs: resolve

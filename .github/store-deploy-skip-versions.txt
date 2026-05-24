@@ -1,7 +1,0 @@
-# Versions listed here skip the automatic Chrome Web Store and Firefox Add-ons
-# deploy that normally runs after the Release workflow succeeds.
-#
-# Manual Store Deploy workflow dispatch is still allowed for these versions.
-# Accepts either 1.5.0 or v1.5.0.
-
-1.5.0
