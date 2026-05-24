@@ -1,6 +1,7 @@
 import { webext } from './webext.js';
 
 const SETTINGS_KEY = 'classicWebSearchSettings';
+const SET_CLASSIC_WEB_SEARCH_ENABLED_MESSAGE = 'setClassicWebSearchEnabled';
 const DEFAULT_SETTINGS = {
   isWebSearchEnabled: false,
   num_changes: 0,
@@ -26,13 +27,20 @@ const getStoredSettings = async () => {
   };
 };
 
-const saveSettings = async settings => {
-  const nextSettings = {
-    ...currentSettings,
-    ...settings,
+const setEnabled = async isEnabled => {
+  const response = await webext.runtime.sendMessage({
+    action: SET_CLASSIC_WEB_SEARCH_ENABLED_MESSAGE,
+    isEnabled,
+  });
+
+  if (!response?.ok) {
+    throw new Error('Background update failed');
+  }
+
+  currentSettings = {
+    ...DEFAULT_SETTINGS,
+    ...(response.settings || {}),
   };
-  await webext.storage.sync.set({ [SETTINGS_KEY]: nextSettings });
-  currentSettings = nextSettings;
   render(currentSettings);
 };
 
@@ -64,9 +72,7 @@ const restore = async () => {
 toggleButton.addEventListener('click', async () => {
   toggleButton.disabled = true;
   try {
-    await saveSettings({
-      isWebSearchEnabled: !currentSettings.isWebSearchEnabled,
-    });
+    await setEnabled(!currentSettings.isWebSearchEnabled);
   } catch (error) {
     console.error('Failed to save options', error);
     render(currentSettings);
