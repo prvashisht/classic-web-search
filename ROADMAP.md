@@ -74,9 +74,9 @@ land before broader product and release-process work.
    Provide a small dashboard for current state, redirect count, version,
    release notes, and support links.
 
-- [ ] Track redirect count accurately.
+- ~~[ ] Track redirect count accurately.
    Count successful automatic redirects and expose the value in storage and the
-   options page.
+   options page.~~
 
 ## Priority 5: Repository Maintenance
 
