@@ -63,10 +63,10 @@ land before broader product and release-process work.
 
 ## Priority 4: User Controls
 
-- [ ] Add a keyboard shortcut.
+- [x] Add a keyboard shortcut.
    Let users toggle the extension without opening the toolbar menu.
 
-- [ ] Add context menu actions.
+- [x] Add context menu actions.
    Add actions for enable/disable, settings, keyboard shortcuts, rating, and
    bug reporting.
 

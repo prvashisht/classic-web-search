@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Classic Web Search for Google",
   "short_name": "Classic Web",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Automatically redirects your Google searches to the classic web-only results view.",
   "author": "Pratyush Vashisht",
   "background": {
@@ -27,7 +27,17 @@
     },
     "default_title": "Enable / Disable Classic Web Search for Google"
   },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+W",
+        "mac": "Alt+Shift+W"
+      },
+      "description": "Toggle Classic Web Search for Google on/off"
+    }
+  },
   "permissions": [
+    "contextMenus",
     "storage",
     "tabs"
   ]

@@ -1,5 +1,13 @@
 import { webext } from './webext.js';
 
+const CONTEXT_MENU_TOGGLE_ID = "toggle-classic-web-search";
+const CONTEXT_MENU_MANAGE_ID = "manage-extension";
+const CONTEXT_MENU_SHORTCUTS_ID = "manage-keyboard-shortcuts";
+const CONTEXT_MENU_RATE_ID = "rate-classic-web-search";
+const CONTEXT_MENU_SUPPORT_ID = "report-bug-or-support";
+const RATE_REVIEW_URL = "https://vashis.ht/rd/classicwebsearch?from=classicwebsearch-extension-context_menu";
+const SUPPORT_URL = "https://github.com/prvashisht/classic-web-search/issues/new";
+
 let classicWebSearchSettings = {
   isWebSearchEnabled: false,
   lastChangedSearch: "",
@@ -27,6 +35,23 @@ let setExtensionUninstallURL = (settings) => {
   }
 };
 
+let updateContextMenuState = () => {
+  if (!webext.contextMenus?.update) {
+    return;
+  }
+
+  try {
+    const result = webext.contextMenus.update(CONTEXT_MENU_TOGGLE_ID, {
+      checked: classicWebSearchSettings.isWebSearchEnabled,
+    });
+    if (result && typeof result.catch === 'function') {
+      result.catch(() => {});
+    }
+  } catch (error) {
+    // The menu may not exist yet during startup or immediately after install.
+  }
+};
+
 let applyExtensionDetails = details => {
   classicWebSearchSettings = { ...classicWebSearchSettings, ...details };
 
@@ -38,6 +63,8 @@ let applyExtensionDetails = details => {
   webext.action.setBadgeBackgroundColor({
     color: classicWebSearchSettings.isWebSearchEnabled ? "#00FF00" : "#F00000",
   });
+
+  updateContextMenuState();
 };
 
 let saveAndApplyExtensionDetails = async details => {
@@ -68,6 +95,69 @@ let restoreExtensionDetails = async () => {
 
 let classicWebSearchSettingsReady = restoreExtensionDetails();
 
+let createContextMenu = details => {
+  try {
+    webext.contextMenus.create(details);
+  } catch (error) {
+    console.warn("Failed to create context menu item", details.id, error);
+  }
+};
+
+let buildContextMenus = async () => {
+  if (!webext.contextMenus?.removeAll) {
+    return;
+  }
+
+  try {
+    const result = webext.contextMenus.removeAll();
+    if (result && typeof result.then === 'function') {
+      await result;
+    }
+  } catch (error) {
+    console.warn("Failed to reset context menu", error);
+  }
+
+  createContextMenu({
+    id: CONTEXT_MENU_TOGGLE_ID,
+    type: "checkbox",
+    title: "Enable Classic Web Search",
+    contexts: ["action"],
+    checked: classicWebSearchSettings.isWebSearchEnabled,
+  });
+  createContextMenu({
+    id: CONTEXT_MENU_MANAGE_ID,
+    title: "Manage extension",
+    contexts: ["action"],
+  });
+  createContextMenu({
+    id: CONTEXT_MENU_SHORTCUTS_ID,
+    title: "Manage keyboard shortcuts",
+    contexts: ["action"],
+  });
+  createContextMenu({
+    id: CONTEXT_MENU_RATE_ID,
+    title: "Rate / review Classic Web Search",
+    contexts: ["action"],
+  });
+  createContextMenu({
+    id: CONTEXT_MENU_SUPPORT_ID,
+    title: "Report a bug / request support",
+    contexts: ["action"],
+  });
+};
+
+let contextMenusReady = Promise.resolve();
+let scheduleBuildContextMenus = () => {
+  contextMenusReady = contextMenusReady.then(buildContextMenus, buildContextMenus);
+  return contextMenusReady;
+};
+
+classicWebSearchSettingsReady
+  .then(scheduleBuildContextMenus)
+  .catch(error => {
+    console.warn("Failed to initialize context menus", error);
+  });
+
 let googleSearchHostnamePattern = /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/;
 let httpUrlPattern = /^https?:\/\//i;
 
@@ -91,11 +181,46 @@ let hasExplicitSearchMode = url => (
   url.searchParams.has('udm') || url.searchParams.has('tbm')
 );
 
-webext.action.onClicked.addListener(async () => {
+let setClassicWebSearchEnabled = async isEnabled => {
   await classicWebSearchSettingsReady;
   await saveAndApplyExtensionDetails({
-    isWebSearchEnabled: !classicWebSearchSettings.isWebSearchEnabled,
+    isWebSearchEnabled: isEnabled,
   });
+};
+
+let toggleClassicWebSearch = async () => {
+  await classicWebSearchSettingsReady;
+  await setClassicWebSearchEnabled(!classicWebSearchSettings.isWebSearchEnabled);
+};
+
+webext.action.onClicked.addListener(async () => {
+  await toggleClassicWebSearch();
+});
+
+webext.contextMenus.onClicked.addListener(async info => {
+  await classicWebSearchSettingsReady;
+
+  switch (info.menuItemId) {
+    case CONTEXT_MENU_TOGGLE_ID:
+      await setClassicWebSearchEnabled(
+        typeof info.checked === 'boolean'
+          ? info.checked
+          : !classicWebSearchSettings.isWebSearchEnabled
+      );
+      break;
+    case CONTEXT_MENU_MANAGE_ID:
+      await webext.openExtensionPage();
+      break;
+    case CONTEXT_MENU_SHORTCUTS_ID:
+      await webext.openShortcutsPage();
+      break;
+    case CONTEXT_MENU_RATE_ID:
+      await webext.tabs.create({ url: RATE_REVIEW_URL });
+      break;
+    case CONTEXT_MENU_SUPPORT_ID:
+      await webext.tabs.create({ url: SUPPORT_URL });
+      break;
+  }
 });
 
 webext.runtime.onInstalled.addListener(async installInfo => {
@@ -120,6 +245,7 @@ webext.runtime.onInstalled.addListener(async installInfo => {
   const data = await webext.storage.sync.get("classicWebSearchSettings");
   if (!data.classicWebSearchSettings) {
     await saveAndApplyExtensionDetails(debugData);
+    await scheduleBuildContextMenus();
     return;
   }
   await saveAndApplyExtensionDetails({
@@ -127,6 +253,7 @@ webext.runtime.onInstalled.addListener(async installInfo => {
     ...debugData,
     num_changes: data.classicWebSearchSettings.num_changes || 0,
   });
+  await scheduleBuildContextMenus();
 });
 
 webext.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
