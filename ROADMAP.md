@@ -80,11 +80,11 @@ land before broader product and release-process work.
 
 ## Priority 5: Repository Maintenance
 
-- [ ] Improve README structure.
+- [x] Improve README structure.
    Document browser support, how the redirect works, development workflow, and
    release process.
 
-- [ ] Add contributing guidelines.
+- [x] Add contributing guidelines.
    Include local testing steps, browser-specific verification, and pull request
    expectations.
 
