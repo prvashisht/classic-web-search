@@ -13,6 +13,9 @@ FIREFOX_MIN_VERSION="121.0"
 
 SOURCES=(
   icons
+  options.css
+  options.html
+  options.js
   service_worker.js
   webext.js
 )

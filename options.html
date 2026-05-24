@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classic Web Search Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="options-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Classic Web Search for Google</p>
+        <h1>Options</h1>
+      </div>
+      <div class="status-pill" id="status-pill" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="status-label">Loading</span>
+      </div>
+    </header>
+
+    <section class="status-panel" aria-labelledby="status-heading">
+      <div>
+        <h2 id="status-heading">Search Redirects</h2>
+        <p class="state-summary" id="state-summary">Loading current state</p>
+      </div>
+      <button class="primary-action" id="toggle-button" type="button" disabled>
+        Loading
+      </button>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Dashboard">
+      <article class="metric-tile">
+        <span class="metric-label">Automatic redirects</span>
+        <strong class="metric-value" id="redirect-count">0</strong>
+      </article>
+      <article class="metric-tile">
+        <span class="metric-label">Version</span>
+        <strong class="metric-value" id="version-number">-</strong>
+      </article>
+      <article class="metric-tile">
+        <span class="metric-label">Release notes</span>
+        <a class="metric-link" id="release-notes-link" href="#" target="_blank" rel="noopener">Open</a>
+      </article>
+      <article class="metric-tile">
+        <span class="metric-label">Shortcuts</span>
+        <button class="text-action" id="shortcuts-button" type="button">Manage</button>
+      </article>
+    </section>
+
+    <section class="link-band" aria-label="Support">
+      <a href="https://github.com/prvashisht/classic-web-search/issues/new" target="_blank" rel="noopener">
+        Report a bug
+      </a>
+      <a href="https://vashis.ht/rd/classicwebsearch?from=classicwebsearch-extension-options" target="_blank" rel="noopener">
+        Rate or review
+      </a>
+      <a href="https://github.com/prvashisht/classic-web-search" target="_blank" rel="noopener">
+        GitHub repository
+      </a>
+    </section>
+  </main>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

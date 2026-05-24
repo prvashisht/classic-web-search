@@ -70,13 +70,13 @@ land before broader product and release-process work.
    Add actions for enable/disable, settings, keyboard shortcuts, rating, and
    bug reporting.
 
-- [ ] Add an options page.
+- [x] Add an options page.
    Provide a small dashboard for current state, redirect count, version,
    release notes, and support links.
 
-- [ ] Track redirect count accurately.
+- ~~[ ] Track redirect count accurately.
    Count successful automatic redirects and expose the value in storage and the
-   options page.
+   options page.~~
 
 ## Priority 5: Repository Maintenance
 

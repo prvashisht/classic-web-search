@@ -5,6 +5,7 @@ const CONTEXT_MENU_MANAGE_ID = "manage-extension";
 const CONTEXT_MENU_SHORTCUTS_ID = "manage-keyboard-shortcuts";
 const CONTEXT_MENU_RATE_ID = "rate-classic-web-search";
 const CONTEXT_MENU_SUPPORT_ID = "report-bug-or-support";
+const SET_CLASSIC_WEB_SEARCH_ENABLED_MESSAGE = "setClassicWebSearchEnabled";
 const RATE_REVIEW_URL = "https://vashis.ht/rd/classicwebsearch?from=classicwebsearch-extension-context_menu";
 const SUPPORT_URL = "https://github.com/prvashisht/classic-web-search/issues/new";
 
@@ -126,7 +127,7 @@ let buildContextMenus = async () => {
   });
   createContextMenu({
     id: CONTEXT_MENU_MANAGE_ID,
-    title: "Manage extension",
+    title: "Open options",
     contexts: ["action"],
   });
   createContextMenu({
@@ -186,6 +187,7 @@ let setClassicWebSearchEnabled = async isEnabled => {
   await saveAndApplyExtensionDetails({
     isWebSearchEnabled: isEnabled,
   });
+  return classicWebSearchSettings;
 };
 
 let toggleClassicWebSearch = async () => {
@@ -209,7 +211,7 @@ webext.contextMenus.onClicked.addListener(async info => {
       );
       break;
     case CONTEXT_MENU_MANAGE_ID:
-      await webext.openExtensionPage();
+      await webext.openOptionsPage();
       break;
     case CONTEXT_MENU_SHORTCUTS_ID:
       await webext.openShortcutsPage();
@@ -221,6 +223,23 @@ webext.contextMenus.onClicked.addListener(async info => {
       await webext.tabs.create({ url: SUPPORT_URL });
       break;
   }
+});
+
+webext.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (!message || message.action !== SET_CLASSIC_WEB_SEARCH_ENABLED_MESSAGE) {
+    return false;
+  }
+
+  setClassicWebSearchEnabled(Boolean(message.isEnabled))
+    .then(settings => {
+      sendResponse({ ok: true, settings });
+    })
+    .catch(error => {
+      console.error("Failed to update classic web search setting", error);
+      sendResponse({ ok: false });
+    });
+
+  return true;
 });
 
 webext.runtime.onInstalled.addListener(async installInfo => {
@@ -254,6 +273,17 @@ webext.runtime.onInstalled.addListener(async installInfo => {
     num_changes: data.classicWebSearchSettings.num_changes || 0,
   });
   await scheduleBuildContextMenus();
+});
+
+webext.storage.onChanged?.addListener((changes, areaName) => {
+  if (areaName !== 'sync' || !changes.classicWebSearchSettings) {
+    return;
+  }
+
+  applyExtensionDetails({
+    ...classicWebSearchSettings,
+    ...(changes.classicWebSearchSettings.newValue || {}),
+  });
 });
 
 webext.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
