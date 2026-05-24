@@ -88,13 +88,13 @@ land before broader product and release-process work.
    Include local testing steps, browser-specific verification, and pull request
    expectations.
 
-- [ ] Add issue-management workflows.
+- ~~[ ] Add issue-management workflows.
    Add stale issue handling, stale-response handling, and one-time label
-   creation for repository triage.
+   creation for repository triage.~~
 
-- [ ] Add release checklist.
+- ~~[ ] Add release checklist.
    Document the required version bump, release notes update, browser testing,
-   and store verification steps.
+   and store verification steps.~~
 
 ## Parking Lot
 
