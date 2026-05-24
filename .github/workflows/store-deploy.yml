@@ -27,7 +27,13 @@ jobs:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     outputs:
       version: ${{ steps.resolve.outputs.version }}
+      skip_store_deploy: ${{ steps.skip.outputs.skip_store_deploy }}
+      skip_reason: ${{ steps.skip.outputs.skip_reason }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
+
       - name: Resolve release version
         id: resolve
         env:
@@ -47,11 +53,47 @@ jobs:
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Check automatic store deploy skip list
+        id: skip
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          SKIP_STORE_DEPLOY=false
+          SKIP_REASON=""
+
+          if [ "${{ github.event_name }}" = "workflow_run" ] && [ -f ".github/store-deploy-skip-versions.txt" ]; then
+            if awk -v version="${VERSION#v}" '
+              {
+                sub(/#.*/, "", $0)
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
+                if ($0 == version || $0 == "v" version) {
+                  found = 1
+                }
+              }
+              END { exit found ? 0 : 1 }
+            ' .github/store-deploy-skip-versions.txt; then
+              SKIP_STORE_DEPLOY=true
+              SKIP_REASON="Automatic store deploy skipped because v${VERSION#v} is listed in .github/store-deploy-skip-versions.txt"
+            fi
+          fi
+
+          echo "skip_store_deploy=$SKIP_STORE_DEPLOY" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=$SKIP_REASON" >> "$GITHUB_OUTPUT"
+
+  skipped:
+    needs: resolve
+    runs-on: ubuntu-latest
+    if: needs.resolve.outputs.skip_store_deploy == 'true'
+    steps:
+      - name: Report skipped store deployment
+        run: echo "::notice::${{ needs.resolve.outputs.skip_reason }}"
+
   chrome:
     needs: resolve
     runs-on: ubuntu-latest
     if: |
       needs.resolve.outputs.version != '' &&
+      needs.resolve.outputs.skip_store_deploy != 'true' &&
       (github.event_name != 'workflow_dispatch' || inputs.stores == 'all' || inputs.stores == 'chrome')
     env:
       CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
@@ -101,6 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       needs.resolve.outputs.version != '' &&
+      needs.resolve.outputs.skip_store_deploy != 'true' &&
       (github.event_name != 'workflow_dispatch' || inputs.stores == 'all' || inputs.stores == 'firefox')
     env:
       FIREFOX_API_KEY: ${{ secrets.FIREFOX_API_KEY }}

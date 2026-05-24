@@ -38,6 +38,12 @@ git clone
 - **Chrome / Edge**: `chrome://extensions/shortcuts`
 - **Firefox**: `about:addons` -> Extensions -> Classic Web Search for Google -> Manage
 
+## Release controls
+
+Merging a manifest version change to `main` creates a GitHub release and, by default, deploys that release to the browser stores.
+
+To create a release without automatic store deployment, add the version to `.github/store-deploy-skip-versions.txt` before merging. Manual deployment remains available from the **Store Deploy** workflow for skipped versions.
+
 ## Files
 
 - **`manifest.json`**: Contains metadata about the extension, including permissions, icons, and scripts.
